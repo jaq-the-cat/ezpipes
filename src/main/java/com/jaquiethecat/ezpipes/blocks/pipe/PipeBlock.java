@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,19 +53,20 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
 
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return CORE_SHAPE;
+        var shape = CORE_SHAPE;
+        for (var dir : Direction.values())
+            if (pState.getValue(getDirectionProperty(dir)))
+                shape = Shapes.or(shape, DIR_SHAPES.get(dir));
+        return shape;
     }
-
     @Override
     public VoxelShape getCollisionShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return CORE_SHAPE;
+        return getShape(pState, pLevel, pPos, pContext);
     }
-
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
-
     public PipeBlock() {
         super(Properties
                 .of(Material.METAL)
@@ -79,7 +81,6 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
                 .setValue(WEST, false)
                 .setValue(IS_IO, false));
     }
-
     BooleanProperty getDirectionProperty(Direction dir) {
         return switch (dir) {
             case UP -> UP;
@@ -90,18 +91,15 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
             case WEST -> WEST;
         };
     }
-
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(UP, DOWN, NORTH, EAST, SOUTH, WEST, IS_IO);
     }
-
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, ModBlockEntities.PIPE.get(), PipeBlockEntity::tick);
     }
-
     @Override
     public BlockState updateShape(BlockState pState, Direction pDirection, BlockState pNeighborState,
                                   LevelAccessor pLevel, BlockPos pCurrentPos, BlockPos pNeighborPos) {
@@ -109,12 +107,10 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
                 getDirectionProperty(pDirection),
                 canConnectTo(pDirection.getOpposite(), pNeighborState.getBlock(), pNeighborPos, pLevel));
     }
-
     protected boolean canConnectTo(Direction side, Block neighbor, BlockPos pNeighborPos, LevelAccessor pLevel) {
         return (neighbor instanceof PipeBlock) || EPUtils.entityIsStorage(
                 pLevel.getBlockEntity(pNeighborPos), side);
     }
-
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
@@ -132,7 +128,6 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
         }
         return pState;
     }
-
     @Override
     public void onPlace(BlockState pState, Level pLevel, BlockPos pPos, BlockState pOldState, boolean pIsMoving) {
         if (pLevel.isClientSide() || pState == pOldState) return;
@@ -150,7 +145,6 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
             }
         }
     }
-
     @Override
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         if (!pState.is(pNewState.getBlock())) {
@@ -169,7 +163,6 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
         }
         super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
     }
-
     @Override
     public void onNeighborChange(BlockState state, LevelReader pLevel, BlockPos pos, BlockPos neighbor) {
         if (pLevel.isClientSide()) return;
@@ -183,7 +176,6 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
             level.setBlockAndUpdate(pos, state.setValue(IS_IO, false));
         }
     }
-
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide() && pHand == InteractionHand.MAIN_HAND) {
@@ -202,7 +194,6 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
         }
         return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
     }
-
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

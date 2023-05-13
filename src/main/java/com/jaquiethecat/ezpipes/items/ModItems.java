@@ -14,13 +14,13 @@ public class ModItems {
             DeferredRegister.create(ForgeRegistries.ITEMS, EZPipes.MOD_ID);
 
     public static final RegistryObject<PipeUpgradeItem> PIPE_UP_T1 = ITEMS.register("pipe_upgrade_t1",
-            () -> new PipeUpgradeItem(PipeTier.T1)); // 3s
+            () -> new PipeUpgradeItem(PipeTier.T1));
     public static final RegistryObject<PipeUpgradeItem> PIPE_UP_T2 = ITEMS.register("pipe_upgrade_t2",
-            () -> new PipeUpgradeItem(PipeTier.T2)); // 2s
+            () -> new PipeUpgradeItem(PipeTier.T2));
     public static final RegistryObject<PipeUpgradeItem> PIPE_UP_T3 = ITEMS.register("pipe_upgrade_t3",
-            () -> new PipeUpgradeItem(PipeTier.T3)); // 1s
+            () -> new PipeUpgradeItem(PipeTier.T3));
     public static final RegistryObject<PipeUpgradeItem> PIPE_UP_T4 = ITEMS.register("pipe_upgrade_t4",
-            () -> new PipeUpgradeItem(PipeTier.T4)); // 0.5s
+            () -> new PipeUpgradeItem(PipeTier.T4));
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }

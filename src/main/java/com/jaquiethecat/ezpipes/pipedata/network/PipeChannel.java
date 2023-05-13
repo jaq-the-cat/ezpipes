@@ -26,7 +26,7 @@ public class PipeChannel {
         this.isPulling = isPulling;
         this.transferType = transferType;
         filters = new HashSet<>();
-        filters.add(new PipeFilter(FilterType.Blacklist, "*"));
+        filters.add(new PipeFilter(FilterType.Whitelist, "*"));
     }
 
     public PipeChannel() {

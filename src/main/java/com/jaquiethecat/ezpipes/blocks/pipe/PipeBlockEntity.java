@@ -33,13 +33,13 @@ import java.util.UUID;
 public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     public UUID networkId;
     public List<PipeChannel> channels;
-    protected static final int TICKS_TO_TRANSFER = 20*2; // 2 seconds
+    public static final int TICKS_TO_TRANSFER = 20*2; // 2 seconds
     private int ticksRemaining;
 
     public PipeBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.PIPE.get(), pos, state);
         channels = new ArrayList<>();
-        channels.add(new PipeChannel(false, TransferType.Energy));
+        channels.add(new PipeChannel(false, TransferType.Item));
     }
 
     public UUID getNetwork(ServerLevel level) {
