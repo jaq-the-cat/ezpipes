@@ -1,4 +1,4 @@
-package com.jaquiethecat.ezpipes.blocks.pipe.network;
+package com.jaquiethecat.ezpipes.pipedata.network;
 
 import com.jaquiethecat.ezpipes.EPUtils;
 import com.jaquiethecat.ezpipes.enums.FilterType;

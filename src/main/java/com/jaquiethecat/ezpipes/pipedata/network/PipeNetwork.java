@@ -1,10 +1,9 @@
-package com.jaquiethecat.ezpipes.blocks.pipe.network;
+package com.jaquiethecat.ezpipes.pipedata.network;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.jaquiethecat.ezpipes.blocks.pipe.PipeBlockEntity;
-import com.jaquiethecat.ezpipes.items.pipe.PipeUpgrade;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +15,6 @@ import java.util.*;
 public class PipeNetwork {
     private final MutableGraph<BlockPos> graph;
     public NetworkInventory inventory;
-    public PipeUpgrade upgrade;
 
     protected PipeNetwork() {
         graph = GraphBuilder.undirected().allowsSelfLoops(true).build();
@@ -46,14 +44,14 @@ public class PipeNetwork {
     public int insertEnergy(int energy) {
         return inventory.addEnergy(energy);
     }
-    public int extractEnergy() {
-        return inventory.extractEnergy();
+    public int extractEnergy(int transfer) {
+        return inventory.extractEnergy(transfer);
     }
     public ItemStack extractFirstItemMatching(PipeFilter filter) {
         return inventory.extractFirstItemMatching(filter);
     }
-    public FluidStack extractFirstFluidMatching(PipeFilter filter) {
-        return inventory.extractFirstFluidMatching(filter);
+    public FluidStack extractFirstFluidMatching(PipeFilter filter, int mult) {
+        return inventory.extractFirstFluidMatching(filter, mult);
     }
 
     public void add(BlockPos pos, BlockPos otherPos) {

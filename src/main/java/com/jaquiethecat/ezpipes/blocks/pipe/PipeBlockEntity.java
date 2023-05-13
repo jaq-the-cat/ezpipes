@@ -2,10 +2,10 @@ package com.jaquiethecat.ezpipes.blocks.pipe;
 
 import com.jaquiethecat.ezpipes.EPUtils;
 import com.jaquiethecat.ezpipes.blocks.ModBlockEntities;
-import com.jaquiethecat.ezpipes.blocks.pipe.network.PipeChannel;
-import com.jaquiethecat.ezpipes.blocks.pipe.network.PipeNetwork;
-import com.jaquiethecat.ezpipes.blocks.pipe.network.PipeNetworks;
-import com.jaquiethecat.ezpipes.blocks.pipe.network.TransferManager;
+import com.jaquiethecat.ezpipes.pipedata.network.PipeChannel;
+import com.jaquiethecat.ezpipes.pipedata.network.PipeNetwork;
+import com.jaquiethecat.ezpipes.pipedata.network.PipeNetworks;
+import com.jaquiethecat.ezpipes.pipedata.network.TransferManager;
 import com.jaquiethecat.ezpipes.enums.TransferType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,7 +33,7 @@ import java.util.UUID;
 public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     public UUID networkId;
     public List<PipeChannel> channels;
-    protected int defaultTicksToTransfer = 20*4; // 4 seconds
+    protected static final int TICKS_TO_TRANSFER = 20*2; // 2 seconds
     private int ticksRemaining;
 
     public PipeBlockEntity(BlockPos pos, BlockState state) {
@@ -66,7 +66,7 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
         if (entity.ticksRemaining <= 0) {
             UUID netId = entity.getNetwork(level.getServer());
             PipeNetwork net = PipeNetworks.getInstance(level.getServer()).getNetwork(netId);
-            entity.ticksRemaining = net.upgrade == null ? entity.defaultTicksToTransfer : net.upgrade.ticksToTransfer;
+            entity.ticksRemaining = TICKS_TO_TRANSFER;
             // transfer stuff
             TransferManager.transfer(entity.channels, net, pos, level);
         }
@@ -80,7 +80,7 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     @NotNull
     @Override
     public Component getDisplayName() {
-        return Component.literal("Pipe");
+        return Component.translatable("block.ezpipes.warped_pipe");
     }
 
     @Override

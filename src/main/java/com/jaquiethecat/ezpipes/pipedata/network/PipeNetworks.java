@@ -1,4 +1,4 @@
-package com.jaquiethecat.ezpipes.blocks.pipe.network;
+package com.jaquiethecat.ezpipes.pipedata.network;
 
 import com.google.common.graph.MutableGraph;
 import com.jaquiethecat.ezpipes.EZPipes;

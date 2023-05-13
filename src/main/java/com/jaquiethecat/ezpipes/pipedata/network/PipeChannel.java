@@ -1,7 +1,9 @@
-package com.jaquiethecat.ezpipes.blocks.pipe.network;
+package com.jaquiethecat.ezpipes.pipedata.network;
 
 import com.jaquiethecat.ezpipes.enums.FilterType;
 import com.jaquiethecat.ezpipes.enums.TransferType;
+import com.jaquiethecat.ezpipes.pipedata.PipeTier;
+import com.jaquiethecat.ezpipes.items.pipe.PipeUpgradeItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -11,7 +13,14 @@ import java.util.*;
 public class PipeChannel {
     public boolean isPulling;
     public TransferType transferType;
+    public PipeUpgradeItem upgradeItem;
     public Set<PipeFilter> filters;
+
+    public PipeTier getUpgrade() {
+        if (upgradeItem == null)
+            return PipeTier.DEFAULT;
+        return upgradeItem.upgrade;
+    }
 
     public PipeChannel(boolean isPulling, TransferType transferType) {
         this.isPulling = isPulling;

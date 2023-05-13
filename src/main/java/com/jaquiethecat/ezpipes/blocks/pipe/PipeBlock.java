@@ -3,7 +3,7 @@ package com.jaquiethecat.ezpipes.blocks.pipe;
 import com.google.common.collect.ImmutableMap;
 import com.jaquiethecat.ezpipes.EPUtils;
 import com.jaquiethecat.ezpipes.blocks.ModBlockEntities;
-import com.jaquiethecat.ezpipes.blocks.pipe.network.PipeNetworks;
+import com.jaquiethecat.ezpipes.pipedata.network.PipeNetworks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;

@@ -1,4 +1,4 @@
-package com.jaquiethecat.ezpipes.blocks.pipe.network;
+package com.jaquiethecat.ezpipes.pipedata.network;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -17,12 +17,9 @@ public class NetworkInventory {
     SimpleContainer inventory;
     long battery;
     List<FluidTank> tanks;
-    public static final int TRANSFER_ENERGY = 160_000; // 160k per (20*4) ticks = 2k/tick
-    public static final int TRANSFER_FLUID = 16_000; // 16 buckets per transfer
-
     static final int MAX_STACKS = 128;
     static final int MAX_TANKS = 32;
-    static final int MAX_FLUID_PER_TANk = 100_000; // 100 buckets
+    static final int MAX_FLUID_PER_TANk = 10_000_000; // 10k buckets
     static final long MAX_ENERGY = 128_000_000_000L; // 128GFE
 
     NetworkInventory() {
@@ -76,17 +73,21 @@ public class NetworkInventory {
         return ItemStack.EMPTY;
     }
 
-    public @NotNull FluidStack extractFirstFluidMatching(PipeFilter filter) {
+    public @NotNull FluidStack extractFirstFluidMatching(PipeFilter filter, int transfer) {
         for (int tankIndex = 0; tankIndex < tanks.size(); tankIndex++)
-            if (filter == null || filter.match(tanks.get(tankIndex).getFluid().getFluid()))
-                return tanks.remove(tankIndex).getFluid();
+            if (filter == null || filter.match(tanks.get(tankIndex).getFluid().getFluid())) {
+                var stack = tanks.get(tankIndex).drain(transfer, IFluidHandler.FluidAction.EXECUTE);
+                if (stack.isEmpty())
+                    tanks.remove(tankIndex);
+                return stack;
+            }
         return FluidStack.EMPTY;
     }
 
-    public int extractEnergy() {
-        if (battery > TRANSFER_ENERGY) {
-            battery -= TRANSFER_ENERGY;
-            return TRANSFER_ENERGY;
+    public int extractEnergy(int transfer) {
+        if (battery > transfer) {
+            battery -= transfer;
+            return transfer;
         }
         int val = (int) battery;
         battery = 0;
