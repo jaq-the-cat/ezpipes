@@ -3,6 +3,8 @@ package com.jaquiethecat.ezpipes.blocks.pipe;
 import com.google.common.collect.ImmutableMap;
 import com.jaquiethecat.ezpipes.EPUtils;
 import com.jaquiethecat.ezpipes.blocks.ModBlockEntities;
+import com.jaquiethecat.ezpipes.pipedata.network.ChannelReference;
+import com.jaquiethecat.ezpipes.pipedata.network.PipeNetwork;
 import com.jaquiethecat.ezpipes.pipedata.network.PipeNetworks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,6 +32,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock, EntityBlock {
     public static final BooleanProperty UP = BooleanProperty.create("up");
@@ -180,15 +183,19 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide() && pHand == InteractionHand.MAIN_HAND) {
             if (pPlayer.getItemInHand(pHand).isEmpty()) {
-                if (pPlayer.isShiftKeyDown()) {
-                    var entity = pLevel.getBlockEntity(pHit.getBlockPos());
-                    if (entity instanceof PipeBlockEntity pipeEntity) {
-                        pipeEntity.channels.get(0).isPulling ^= true;
-                        pPlayer.sendSystemMessage(Component.literal(pipeEntity.channels.get(0).toString()));
+                var entity = pLevel.getBlockEntity(pHit.getBlockPos());
+                if (entity instanceof PipeBlockEntity pipeEntity) {
+                    var server = pLevel.getServer();
+                    UUID netId = pipeEntity.getNetwork(server);
+                    PipeNetwork net = PipeNetworks.getInstance(server).getNetwork(netId);
+                    ChannelReference ref = pipeEntity.syncedChannels.stream().toList().get(0);
+
+                    if (pPlayer.isShiftKeyDown()) {
+                        ref.isInput ^= true;
+                        pPlayer.sendSystemMessage(Component.literal(String.valueOf(ref.isInput)));
+                    } else {
+                        pPlayer.sendSystemMessage(Component.literal(net.toString()));
                     }
-                } else {
-                    var networks = PipeNetworks.getInstance(pLevel.getServer());
-                    pPlayer.sendSystemMessage(Component.literal(networks.toString()));
                 }
             }
         }

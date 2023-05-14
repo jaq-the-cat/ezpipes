@@ -67,7 +67,7 @@ public class NetworkInventory {
     public @NotNull ItemStack extractFirstItemMatching(PipeFilter filter) {
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack itemStack = inventory.getItem(i);
-            if (filter == null || filter.match(itemStack.getItem()))
+            if (!itemStack.isEmpty() && (filter == null || filter.match(itemStack.getItem())))
                 return inventory.removeItem(i, itemStack.getCount());
         }
         return ItemStack.EMPTY;

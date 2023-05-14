@@ -20,6 +20,11 @@ public class PipeFilter {
         this.filter = filter;
     }
 
+    @Override
+    public String toString() {
+        return "PipeFilter{ type: " + filterType + " filter: " + filter + "}";
+    }
+
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putString("filter", filter);

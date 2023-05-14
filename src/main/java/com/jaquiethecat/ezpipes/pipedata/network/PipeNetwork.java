@@ -4,8 +4,11 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.jaquiethecat.ezpipes.blocks.pipe.PipeBlockEntity;
+import com.jaquiethecat.ezpipes.enums.TransferType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.fluids.FluidStack;
@@ -13,22 +16,27 @@ import net.minecraftforge.fluids.FluidStack;
 import java.util.*;
 
 public class PipeNetwork {
+    private String name = "Unnamed Network";
     private final MutableGraph<BlockPos> graph;
-    public NetworkInventory inventory;
-
+    public NetworkInventory inventory = new NetworkInventory();
+    public HashMap<UUID, PipeChannel> channels = new HashMap<>();
     protected PipeNetwork() {
         graph = GraphBuilder.undirected().allowsSelfLoops(true).build();
-        this.inventory = new NetworkInventory();
-    }
-
-    protected PipeNetwork(MutableGraph<BlockPos> graph) {
-        this.graph = graph;
-        this.inventory = new NetworkInventory();
+        channels.put(UUID.randomUUID(), new PipeChannel(TransferType.Item));
     }
 
     public PipeNetwork(BlockPos initial) {
         this();
         graph.addNode(initial);
+    }
+
+    public PipeChannel getChannel(UUID id) {
+        return channels.get(id);
+    }
+
+    protected PipeNetwork(MutableGraph<BlockPos> graph) {
+        this.graph = graph;
+        channels.put(UUID.randomUUID(), new PipeChannel(TransferType.Item));
     }
 
     public boolean contains(BlockPos pos) {
@@ -140,14 +148,16 @@ public class PipeNetwork {
         var nbt = new CompoundTag();
         List<BlockPos> nodes = graph.nodes().stream().toList();
         List<EndpointPair<BlockPos>> edges = graph.edges().stream().toList();
-        // add nodes
+        // name
+        nbt.putString("name", name);
+        // nodes
         {
             var nodesTag = new ArrayList<Integer>(nodes.size() * 3);
             for (BlockPos node : nodes)
                 addPosToList(nodesTag, node);
             nbt.putIntArray("nodes", nodesTag);
         }
-        // add edges
+        // edges
         {
             var edgesTag = new ArrayList<Integer>(graph.edges().size() * 2 * 3);
             for (var edge : edges) {
@@ -156,7 +166,18 @@ public class PipeNetwork {
             }
             nbt.putIntArray("edges", edgesTag);
         }
+        // inventory
         nbt.put("inventory", inventory.serializeNBT());
+        // channels
+        {
+            ListTag channelsLT = new ListTag();
+            channels.forEach((uuid, channel) -> {
+                CompoundTag tag = new CompoundTag();
+                tag.putUUID("uuid", uuid);
+                tag.put("channel", channel.serializeNBT());
+            });
+            nbt.put("channels", channelsLT);
+        }
 
         return nbt;
     }
@@ -165,13 +186,28 @@ public class PipeNetwork {
         var network = new PipeNetwork();
         int[] nodes = nbt.getIntArray("nodes");
         int[] edges = nbt.getIntArray("edges");
+        // name
+        network.name = nbt.getString("name");
+        // nodes
         for (int i = 0; i < nodes.length - 2; i += 3)
             network.graph.addNode(new BlockPos(nodes[i], nodes[i + 1], nodes[i + 2]));
+        // edges
         for (int i = 0; i < edges.length - 5; i += 6)
             network.graph.putEdge(
                     new BlockPos(edges[i], edges[i + 1], edges[i + 2]),
                     new BlockPos(edges[i + 3], edges[i + 4], edges[i + 5]));
+        // inventory
         network.inventory = NetworkInventory.deserializeNBT(nbt.get("inventory"));
+        // channels
+        ListTag channelsLT = (ListTag) nbt.get("channels");
+        for (Tag tag : channelsLT) {
+            if (tag instanceof CompoundTag cEntryNbt) {
+                network.channels.put(
+                    cEntryNbt.getUUID("uuid"),
+                    PipeChannel.deserializeNBT((CompoundTag) cEntryNbt.get("channel"))
+                );
+            }
+        }
         return network;
     }
 }

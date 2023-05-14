@@ -52,6 +52,7 @@ public final class EPUtils {
             updateNeighboringStorage(pos, level);
             neighboringStorageCountdown = COUNTDOWN_MAX;
         }
+
     }
 
     public static Set<BlockEntity> getNeighboringStorage(BlockPos pos, LevelReader level) {

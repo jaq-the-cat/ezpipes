@@ -13,7 +13,10 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class PipeNetworks extends SavedData {
     protected PipeNetworks() {}
@@ -70,10 +73,11 @@ public class PipeNetworks extends SavedData {
         if (id == null) return;
         var net = getNetwork(id);
         var netInv = net.inventory;
+        var channels = net.channels;
         
         Set<MutableGraph<BlockPos>> sections = net.getSectionsFrom(pos);
         if (sections != null && sections.size() > 1) {
-            unmergeInto(id, sections, netInv, level);
+            unmergeInto(id, sections, netInv, channels, level);
             return;
         }
         net.remove(pos);
@@ -83,14 +87,16 @@ public class PipeNetworks extends SavedData {
         this.setDirty();
     }
     public void unmergeInto(UUID id, Set<MutableGraph<BlockPos>> sections,
-                            NetworkInventory netInv, LevelAccessor level) {
+                            NetworkInventory netInv, HashMap<UUID, PipeChannel> channels, LevelAccessor level) {
         boolean transferInventory = true;
         for (MutableGraph<BlockPos> section : sections) {
             if (section.nodes().isEmpty()) continue;
             var newId = newNetwork(section);
-            getNetwork(newId).updateAllIDs(newId, level);
+            var net = getNetwork(newId);
+            net.updateAllIDs(newId, level);
+            channels.forEach((channelId, channel) -> net.channels.put(channelId, channel.copy()));
             if (transferInventory) {
-                getNetwork(newId).inventory = netInv;
+                net.inventory = netInv;
                 transferInventory = false;
             }
         }
