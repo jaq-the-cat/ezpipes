@@ -9,27 +9,27 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class TransferManager {
     private TransferManager() {}
 
-    public static void transfer(Collection<ChannelReference> channels, PipeNetwork net, BlockPos pos,
+    public static void transfer(HashMap<UUID, ChannelReference> channels, PipeNetwork net, BlockPos pos,
                                 Level level) {
         var neighbors = EPUtils.getNeighboringStorage(pos, level);
         if (neighbors.isEmpty()) return;
         for (BlockEntity neighbor : neighbors) {
             var side = Direction.fromNormal(pos.subtract(neighbor.getBlockPos()));
-            for (ChannelReference channelRef : channels) {
-                var channel = net.getChannel(channelRef.id);
-                var isInput = channelRef.isInput;
+            channels.forEach((id, ref) -> {
+                var channel = net.getChannel(id);
                 switch (channel.transferType) {
-                    case Item -> transferItem(isInput, channel, net, pos, side, neighbor);
-                    case Fluid -> transferFluids(isInput, channel, net, pos, side, neighbor);
-                    case Energy -> transferEnergy(isInput, channel, net, side, neighbor);
+                    case Item -> transferItem(ref.isInput, channel, net, pos, side, neighbor);
+                    case Fluid -> transferFluids(ref.isInput, channel, net, pos, side, neighbor);
+                    case Energy -> transferEnergy(ref.isInput, channel, net, side, neighbor);
                     case None -> { }
                 }
-            }
+            });
         }
     }
     public static void transferItem(boolean isInput, PipeChannel channel, PipeNetwork net, BlockPos pos, Direction side,

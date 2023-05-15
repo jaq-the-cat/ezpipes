@@ -3,12 +3,12 @@ package com.jaquiethecat.ezpipes.blocks.pipe;
 import com.google.common.collect.ImmutableMap;
 import com.jaquiethecat.ezpipes.EPUtils;
 import com.jaquiethecat.ezpipes.blocks.ModBlockEntities;
-import com.jaquiethecat.ezpipes.pipedata.network.ChannelReference;
 import com.jaquiethecat.ezpipes.pipedata.network.PipeNetwork;
 import com.jaquiethecat.ezpipes.pipedata.network.PipeNetworks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -179,25 +179,27 @@ public class PipeBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
             level.setBlockAndUpdate(pos, state.setValue(IS_IO, false));
         }
     }
+    private void printInformation(BlockEntity entity, MinecraftServer server, Player player) {
+        if (!(entity instanceof PipeBlockEntity pipeEntity)) return;
+        UUID netId = pipeEntity.getNetwork(server);
+        PipeNetwork net = PipeNetworks.getInstance(server).getNetwork(netId);
+        var refOptional = pipeEntity.syncedChannels.values().stream().findFirst();
+        if (refOptional.isPresent()) {
+            var ref = refOptional.get();
+            if (player.isShiftKeyDown()) {
+                ref.isInput ^= true;
+                player.sendSystemMessage(Component.literal(String.valueOf(ref.isInput)));
+            } else {
+                player.sendSystemMessage(Component.literal(net.toString()));
+            }
+        }
+    }
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (!pLevel.isClientSide() && pHand == InteractionHand.MAIN_HAND) {
-            if (pPlayer.getItemInHand(pHand).isEmpty()) {
-                var entity = pLevel.getBlockEntity(pHit.getBlockPos());
-                if (entity instanceof PipeBlockEntity pipeEntity) {
-                    var server = pLevel.getServer();
-                    UUID netId = pipeEntity.getNetwork(server);
-                    PipeNetwork net = PipeNetworks.getInstance(server).getNetwork(netId);
-                    ChannelReference ref = pipeEntity.syncedChannels.stream().toList().get(0);
-
-                    if (pPlayer.isShiftKeyDown()) {
-                        ref.isInput ^= true;
-                        pPlayer.sendSystemMessage(Component.literal(String.valueOf(ref.isInput)));
-                    } else {
-                        pPlayer.sendSystemMessage(Component.literal(net.toString()));
-                    }
-                }
-            }
+        if (!pLevel.isClientSide() && pHand == InteractionHand.MAIN_HAND && pPlayer.getItemInHand(pHand).isEmpty()) {
+            printInformation(
+                    pLevel.getBlockEntity(pHit.getBlockPos()),
+                    pLevel.getServer(), pPlayer);
         }
         return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
     }

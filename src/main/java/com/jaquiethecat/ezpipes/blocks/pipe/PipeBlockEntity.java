@@ -25,13 +25,12 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     public UUID networkId;
-    public Set<ChannelReference> syncedChannels = new HashSet<>();
+    public HashMap<UUID, ChannelReference> syncedChannels = new HashMap<>();
     public static final int TICKS_TO_TRANSFER = 20*2; // 2 seconds
     private int ticksRemaining;
 
@@ -76,9 +75,22 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
         if (syncedChannels.isEmpty()) { // TODO: Remove this if statement too
 //            syncedChannels.clear();
             net.channels.forEach((uuid, channel) ->
-                    syncedChannels.add(new ChannelReference(uuid, false)));
+                    syncedChannels.put(uuid, new ChannelReference(false)));
         }
     }
+
+    public void syncChannel(UUID id) {
+        syncedChannels.put(id, new ChannelReference(false));
+    }
+
+    public void unsyncChannel(UUID id) {
+        syncedChannels.remove(id);
+    }
+
+    public void toggleChannelIO(UUID id) {
+        syncedChannels.get(id).isInput ^= true;
+    }
+
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         return LazyOptional.empty();
@@ -92,11 +104,11 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag nbt) {
         nbt.putUUID("networkId", networkId);
         ListTag channelsLT = new ListTag();
-        for (ChannelReference syncedChannel : syncedChannels) {
+        syncedChannels.forEach((id, ref) -> {
             CompoundTag tag = new CompoundTag();
-            tag.putUUID("uuid", syncedChannel.id);
-            tag.putBoolean("isInput", syncedChannel.isInput);
-        }
+            tag.putUUID("uuid", id);
+            tag.putBoolean("isInput", ref.isInput);
+        });
         nbt.put("channels", channelsLT);
         super.saveAdditional(nbt);
     }
@@ -106,11 +118,10 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
         networkId = nbt.getUUID("networkId");
         var channelsLT = (ListTag) nbt.get("channels");
         if (channelsLT == null) return;
-        syncedChannels = new HashSet<>(channelsLT.size());
+        syncedChannels = new HashMap<>(channelsLT.size());
         for (Tag tag : channelsLT)
             if (tag instanceof CompoundTag channelTag)
-                syncedChannels.add(new ChannelReference(
-                        channelTag.getUUID("uuid"),
-                        channelTag.getBoolean("isInput")));
+                syncedChannels.put(channelTag.getUUID("uuid"),
+                        new ChannelReference(channelTag.getBoolean("isInput")));
     }
 }

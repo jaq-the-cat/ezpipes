@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 class Distributer {
-
-    // TODO: Save this with channel, clear outputs on merge/unmerge
-
     private ArrayList<BlockPos> outputs;
     private int index;
 
