@@ -12,7 +12,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,32 +34,13 @@ public final class EPUtils {
         return false;
     }
 
-    private static final HashMap<BlockPos, Set<BlockEntity>> neighboringStorageCache = new HashMap<>();
-    private static final int COUNTDOWN_MAX = 40;
-    private static int neighboringStorageCountdown = COUNTDOWN_MAX;
-    public static void updateNeighboringStorage(BlockPos pos, LevelReader level) {
+    public static Set<BlockEntity> getNeighboringStorage(BlockPos pos, LevelReader level) {
         Set<BlockEntity> neighbors = new HashSet<>();
         for (var dir : Direction.values()) {
             var entity = level.getBlockEntity(pos.relative(dir));
             if (entityIsStorage(entity, dir.getOpposite())) neighbors.add(entity);
         }
-        neighboringStorageCache.put(pos, neighbors);
-    }
-    public static void checkNeighboringUpdateCountdown(BlockPos pos, LevelReader level) {
-        neighboringStorageCountdown -= 1;
-        if (neighboringStorageCountdown <= 0) {
-            updateNeighboringStorage(pos, level);
-            neighboringStorageCountdown = COUNTDOWN_MAX;
-        }
-
-    }
-
-    public static Set<BlockEntity> getNeighboringStorage(BlockPos pos, LevelReader level) {
-        var value = neighboringStorageCache.get(pos);
-        if (value == null || value.isEmpty()) {
-            updateNeighboringStorage(pos, level);
-        }
-        return neighboringStorageCache.get(pos);
+        return neighbors;
     }
 
     public static @Nullable <T> T getCapability(Capability<T> cap, Direction side, BlockEntity entity){

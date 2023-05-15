@@ -1,6 +1,5 @@
 package com.jaquiethecat.ezpipes.blocks.pipe;
 
-import com.jaquiethecat.ezpipes.EPUtils;
 import com.jaquiethecat.ezpipes.blocks.ModBlockEntities;
 import com.jaquiethecat.ezpipes.pipedata.network.ChannelReference;
 import com.jaquiethecat.ezpipes.pipedata.network.PipeNetwork;
@@ -26,7 +25,9 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     public UUID networkId;
@@ -58,7 +59,6 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
     public static void tick(Level level, BlockPos pos, BlockState state, PipeBlockEntity entity) {
         if (level.isClientSide()) return;
 
-        EPUtils.checkNeighboringUpdateCountdown(pos, level);
         entity.ticksRemaining -= 1;
         if (entity.ticksRemaining <= 0) {
             entity.ticksRemaining = TICKS_TO_TRANSFER;
@@ -67,13 +67,13 @@ public class PipeBlockEntity extends BlockEntity implements MenuProvider {
             UUID netId = entity.getNetwork(server);
             PipeNetwork net = PipeNetworks.getInstance(server).getNetwork(netId);
 
-            entity.syncAllChannels(net);
+            entity.syncAllChannels(net); // TODO: Remove this
             TransferManager.transfer(entity.syncedChannels, net, pos, level);
         }
     }
 
     private void syncAllChannels(PipeNetwork net) {
-        if (syncedChannels.isEmpty()) { // TODO: Remove this if statement
+        if (syncedChannels.isEmpty()) { // TODO: Remove this if statement too
 //            syncedChannels.clear();
             net.channels.forEach((uuid, channel) ->
                     syncedChannels.add(new ChannelReference(uuid, false)));

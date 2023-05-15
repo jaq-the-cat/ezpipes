@@ -69,6 +69,8 @@ public class PipeNetwork {
 
     public void remove(BlockPos pos) {
         graph.removeNode(pos);
+        for (PipeChannel channel : channels.values())
+            channel.dist.remove(pos);
     }
 
     public Set<MutableGraph<BlockPos>> getSectionsFrom(BlockPos removed) {
@@ -112,16 +114,23 @@ public class PipeNetwork {
             graph.putEdge(edge.nodeU(), edge.nodeV());
         inventory.addFrom(other.inventory);
         graph.putEdge(connectedTo, connecting);
+        clearChannels();
     }
-
+    public void clearChannels() {
+        for (PipeChannel channel : this.channels.values()) {
+            channel.dist.clear();
+        }
+    }
     // Go through each node, get their BlockEntity and update its network ID
     public void updateAllIDs(UUID newId, LevelAccessor level) {
         for (BlockPos node : graph.nodes()) {
             var entity = (PipeBlockEntity) level.getBlockEntity(node);
-            if (entity != null) entity.networkId = newId;
+            if (entity != null) {
+                entity.syncedChannels.clear();
+                entity.networkId = newId;
+            }
         }
     }
-
     public String toString() {
         StringBuilder str = new StringBuilder("PipeNetwork{");
         str.append("\n  Nodes {");
@@ -137,13 +146,11 @@ public class PipeNetwork {
         str.append("\n  }\n}");
         return str.toString();
     }
-
     private void addPosToList(List<Integer> tag, BlockPos pos) {
         tag.add(pos.getX());
         tag.add(pos.getY());
         tag.add(pos.getZ());
     }
-
     public CompoundTag serializeNBT() {
         var nbt = new CompoundTag();
         List<BlockPos> nodes = graph.nodes().stream().toList();
@@ -181,7 +188,6 @@ public class PipeNetwork {
 
         return nbt;
     }
-
     public static PipeNetwork deserializeNBT(CompoundTag nbt) {
         var network = new PipeNetwork();
         int[] nodes = nbt.getIntArray("nodes");

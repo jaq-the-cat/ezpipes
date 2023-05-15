@@ -81,8 +81,10 @@ public class PipeNetworks extends SavedData {
             return;
         }
         net.remove(pos);
-        if (net.isEmpty())
+        if (net.isEmpty()) {
             networks.remove(id);
+        } else {
+        }
 
         this.setDirty();
     }
@@ -95,6 +97,7 @@ public class PipeNetworks extends SavedData {
             var net = getNetwork(newId);
             net.updateAllIDs(newId, level);
             channels.forEach((channelId, channel) -> net.channels.put(channelId, channel.copy()));
+            net.clearChannels();
             if (transferInventory) {
                 net.inventory = netInv;
                 transferInventory = false;
